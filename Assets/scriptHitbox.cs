@@ -6,9 +6,14 @@ public class PlayerHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("EnemyAttack"))
+       
+        // Versuche, das EnemyAttack-Script vom anderen Objekt zu bekommen
+        EnemyAttack attack = other.GetComponent<EnemyAttack>();
+
+        // Wenn das Objekt ein EnemyAttack-Script hat → Schaden zufügen
+        if (attack != null)
         {
-            health.TakeDamage(10);
+            health.TakeDamage(attack.damage);
         }
     }
 }
