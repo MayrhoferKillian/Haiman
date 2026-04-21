@@ -1,17 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class teleport : Monobehaviour
+public class Teleport : MonoBehaviour
 {
-	public Transform Player, Destination;
-	public GameObject playerg;
-	
-	void OnTriggerEnter(Collider other){
-		if(other.CompareTag("Player")){
-			playerg.SetActivate(false);
-			player.position = destination.position;
-			playerg.SetActivate(true);
-		}
-	}
+    public Transform destination; 
+    
+    void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            other.gameObject.SetActive(false); 
+            other.transform.position = destination.position; 
+            other.gameObject.SetActive(true); 
+        }
+    }
 }
