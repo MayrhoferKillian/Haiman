@@ -1,0 +1,93 @@
+✅ 1. Skript auf den Gegner ziehen
+Gegner‑Prefab oder Gegner‑Objekt auswählen
+
+Dein enemyai‑Skript per Drag & Drop draufziehen
+
+Im Inspector erscheinen Felder wie:
+
+Sight Range
+
+Attack Range
+
+Walk Point Range
+
+What Is Ground
+
+What Is Player
+
+Diese musst du einmalig korrekt setzen (siehe Schritt 4).
+
+--------------------------------------------------------------------
+
+✅ 2. NavMesh einrichten (Pflicht!)
+Ohne NavMeshAgent + NavMesh bewegt sich der Gegner nicht.
+
+Schritte:
+Terrain / Boden auswählen
+
+Oben im Menü:
+Window → AI → Navigation
+
+Reiter Bake öffnen
+
+Navigation Static aktivieren
+
+Auf Bake klicken
+
+Jetzt ist dein Level begehbar für NavMeshAgents.
+
+--------------------------------------------------------------------
+
+✅ 3. NavMeshAgent auf dem Gegner
+Auf deinem Gegner muss eine Komponente sein:
+Nav Mesh Agent
+
+Wichtig:
+
+Einstellung		Empfehlung
+Speed			3–5
+Acceleration		6–10
+Angular Speed		120–360
+Stopping Distance	1–2
+Auto Braking		an
+Base Offset		0–1 (je nach Modell)
+
+Wenn der Agent nicht auf dem Boden sitzt → Base Offset anpassen.
+
+--------------------------------------------------------------------
+
+✅ 4. Layer korrekt setzen (sehr wichtig!)
+Damit Sicht & Attack funktionieren:
+
+Player:
+Layer: Player
+
+Im Skript: whatIsPlayer = Player Layer
+
+Boden:
+Layer: Ground
+
+Im Skript: whatIsGround = Ground Layer
+
+Wenn du das nicht machst:
+
+Gegner sieht dich nicht
+
+Gegner findet keine WalkPoints
+
+Gegner bleibt stehen
+
+--------------------------------------------------------------------
+
+✅ 5. Player‑Objekt muss „Player“ heißen (SCHRITT KANN AUSGELASSEN WERDEN, WENN DAS SPIELEROBJEKT PLAYER HEISST)
+In deinem Skript steht:
+player = GameObject.Find("Player").transform;
+
+Wenn dein Spieler anders heißt (z. B. „FPSController“), findet das Skript ihn nicht.
+
+✔ Lösung:
+Spieler im Hierarchy‑Fenster Player nennen
+oder
+den Code ändern:
+public Transform player; // und im Inspector zuweisen
+
