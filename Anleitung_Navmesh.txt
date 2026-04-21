@@ -91,3 +91,5 @@ oder
 den Code ändern:
 public Transform player; // und im Inspector zuweisen
 
+
+
