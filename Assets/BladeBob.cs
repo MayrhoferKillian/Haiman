@@ -14,9 +14,22 @@ public class BladeBob : MonoBehaviour
 
     void Update()
     {
-        float theta = Time.time * (2f * Mathf.PI / period);
-        float distance = amplitude * Mathf.Sin(theta);
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+        bool isMoving = Mathf.Abs(x) > 0.1f || Mathf.Abs(z) > 0.1f;
 
-        transform.localPosition = startLocalPos + Vector3.up * distance;
+        float amplitudeY = isMoving ? 0.05f : 0.02f;
+        float amplitudeX = isMoving ? 0.03f : 0.0f;
+        float period = isMoving ? 2f : 5f;
+
+        float theta = Time.time * (2f * Mathf.PI / period);
+
+        // Links ↔ Rechts Bewegung
+        float bobX = amplitudeX * Mathf.Sin(theta);
+
+        // Immer nach unten (U-Form)
+        float bobY = -amplitudeY * Mathf.Abs(Mathf.Sin(theta));
+
+        transform.localPosition = startLocalPos + new Vector3(bobX, bobY, 0f);
     }
 }
