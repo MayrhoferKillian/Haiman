@@ -3,42 +3,54 @@ using System.Collections;
 
 public class SwitchController : MonoBehaviour
 {
-    [Header("Verknüpfungen")]
-    public GameObject wallToHide; 
-    public CameraShake cameraShake; // NEU: Hier kommt die Kamera rein!
+    [Header("Kameras")]
+    public GameObject playerCamera;   
+    public GameObject cutsceneCamera; 
+
+    [Header("UI Elemente")]
+    public GameObject interactionText; 
+    public GameObject skipText;        
 
     [Header("Ketten-Animation")]
     public float pullDistance = 0.5f; 
-    public float pullSpeed = 2f;      
+    public float pullSpeed = 2f;
 
-    [Header("Mauer-Erdbeben")]
-    public float wallSinkDistance = 5f; // Wie tief sinkt die Mauer in den Boden?
-    public float wallSinkSpeed = 1.5f;  // Wie schnell sinkt sie?
-    public float shakeDuration = 2f;    // Wie lange wackelt das Bild?
-    public float shakeMagnitude = 0.1f; // Wie heftig wackelt es?
+    [Header("Mauer & Erdbeben")]
+    public GameObject wallToHide;
+    public float wallSinkDistance = 5f;
+    public float wallSinkSpeed = 3f;
 
     private Vector3 originalPosition;
-    private bool isPulling = false;   
+    private bool isCutsceneActive = false;
+    private bool canSkip = false;
 
     void Start()
     {
         originalPosition = transform.position;
+        if (skipText != null) skipText.SetActive(false);
+        if (cutsceneCamera != null) cutsceneCamera.SetActive(false);
     }
 
     public void ActivateSwitch()
     {
-        if (!isPulling)
+        if (!isCutsceneActive)
         {
-            StartCoroutine(PullAndCrumbleAnimation());
+            // FIX 1: Hitbox (Collider) der Kette sofort abschalten!
+            // So verschwindet der Raycast-Text sofort und man kann nicht 2x klicken.
+            Collider col = GetComponent<Collider>();
+            if (col != null) col.enabled = false;
+
+            StartCoroutine(RunCutscene());
         }
     }
 
-    IEnumerator PullAndCrumbleAnimation()
+    IEnumerator RunCutscene()
     {
-        isPulling = true;
-        this.enabled = false; // Direkt deaktivieren, damit man nicht spammen kann
+        isCutsceneActive = true;
 
-        // 1. Kette nach unten ziehen
+        if (interactionText != null) interactionText.SetActive(false);
+
+        // Kette nach unten ziehen
         Vector3 targetPosition = originalPosition - new Vector3(0, pullDistance, 0);
         while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
         {
@@ -46,35 +58,70 @@ public class SwitchController : MonoBehaviour
             yield return null; 
         }
 
-        // 2. DAS ERDBEBEN STARTET
-        if (wallToHide != null)
+        // FIX 2: Erst die neue Kamera an, DANN die alte aus (verhindert den Fehler)
+        cutsceneCamera.SetActive(true);
+        
+        // Sicherheitshalber auch die Kamera-Komponente direkt erzwingen
+        Camera cutCam = cutsceneCamera.GetComponent<Camera>();
+        if (cutCam != null) cutCam.enabled = true;
+
+        playerCamera.SetActive(false);
+
+        CameraShake shake = cutsceneCamera.GetComponent<CameraShake>();
+        if (shake != null) StartCoroutine(shake.Shake(4f, 0.2f));
+
+        StartCoroutine(AnimateWallSink());
+
+        yield return new WaitForSeconds(3f);
+
+        canSkip = true;
+        if (skipText != null) skipText.SetActive(true);
+
+        float maxDuration = 4f; 
+        float timer = 0;
+        while (timer < maxDuration)
         {
-            // Starte das Kamera-Wackeln (wenn eine Kamera verlinkt ist)
-            if (cameraShake != null)
-            {
-                StartCoroutine(cameraShake.Shake(shakeDuration, shakeMagnitude));
-            }
-
-            // Zielpunkt für die Mauer berechnen (tief im Boden)
-            Vector3 wallStartPos = wallToHide.transform.position;
-            Vector3 wallEndPos = wallStartPos - new Vector3(0, wallSinkDistance, 0);
-
-            // Mauer langsam in den Boden sinken lassen
-            while (Vector3.Distance(wallToHide.transform.position, wallEndPos) > 0.01f)
-            {
-                wallToHide.transform.position = Vector3.MoveTowards(wallToHide.transform.position, wallEndPos, wallSinkSpeed * Time.deltaTime);
-                yield return null;
-            }
-            
-            // Wenn sie komplett im Boden versunken ist, deaktivieren wir sie endgültig
-            wallToHide.SetActive(false);
+            if (Input.GetKeyDown(KeyCode.Space) && canSkip) break; 
+            timer += Time.deltaTime;
+            yield return null;
         }
 
-        // 3. Kette schnalzt wieder nach oben
+        EndCutscene();
+    }
+
+    IEnumerator AnimateWallSink()
+    {
+        if (wallToHide == null) yield break;
+        Vector3 endPos = wallToHide.transform.position - new Vector3(0, wallSinkDistance, 0);
+        
+        while (Vector3.Distance(wallToHide.transform.position, endPos) > 0.05f)
+        {
+            wallToHide.transform.position = Vector3.MoveTowards(wallToHide.transform.position, endPos, wallSinkSpeed * Time.deltaTime);
+            yield return null;
+        }
+        wallToHide.SetActive(false); 
+    }
+
+    void EndCutscene()
+    {
+        if (wallToHide != null) wallToHide.SetActive(false);
+
+        cutsceneCamera.SetActive(false);
+        playerCamera.SetActive(true);
+        
+        if (skipText != null) skipText.SetActive(false);
+
+        StartCoroutine(ResetChain());
+    }
+
+    IEnumerator ResetChain()
+    {
         while (Vector3.Distance(transform.position, originalPosition) > 0.01f)
         {
             transform.position = Vector3.MoveTowards(transform.position, originalPosition, (pullSpeed * 1.5f) * Time.deltaTime);
             yield return null;
         }
+        
+        this.enabled = false; 
     }
 }
