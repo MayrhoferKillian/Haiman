@@ -26,4 +26,9 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player died!");
         // später: Respawn, Game Over, Animation, etc.
     }
+	
+	void Update()
+    {
+        Debug.Log("Player Health: " + currentHealth);
+    }
 }
