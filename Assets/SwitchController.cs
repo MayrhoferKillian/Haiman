@@ -19,6 +19,8 @@ public class SwitchController : MonoBehaviour
     public GameObject wallToHide;
     public float wallSinkDistance = 5f;
     public float wallSinkSpeed = 3f;
+    public float shakeDuration = 4f;    // WIEDER DA: Wie lange wackelt es?
+    public float shakeMagnitude = 0.2f; // WIEDER DA: Wie stark wackelt es?
 
     private Vector3 originalPosition;
     private bool isCutsceneActive = false;
@@ -35,8 +37,6 @@ public class SwitchController : MonoBehaviour
     {
         if (!isCutsceneActive)
         {
-            // FIX 1: Hitbox (Collider) der Kette sofort abschalten!
-            // So verschwindet der Raycast-Text sofort und man kann nicht 2x klicken.
             Collider col = GetComponent<Collider>();
             if (col != null) col.enabled = false;
 
@@ -58,17 +58,15 @@ public class SwitchController : MonoBehaviour
             yield return null; 
         }
 
-        // FIX 2: Erst die neue Kamera an, DANN die alte aus (verhindert den Fehler)
+        // Kameras umschalten
         cutsceneCamera.SetActive(true);
-        
-        // Sicherheitshalber auch die Kamera-Komponente direkt erzwingen
         Camera cutCam = cutsceneCamera.GetComponent<Camera>();
         if (cutCam != null) cutCam.enabled = true;
-
         playerCamera.SetActive(false);
 
+        // Das Wackeln mit deinen eingestellten Werten auslösen!
         CameraShake shake = cutsceneCamera.GetComponent<CameraShake>();
-        if (shake != null) StartCoroutine(shake.Shake(4f, 0.2f));
+        if (shake != null) StartCoroutine(shake.Shake(shakeDuration, shakeMagnitude));
 
         StartCoroutine(AnimateWallSink());
 
