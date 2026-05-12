@@ -5,7 +5,6 @@ public class enemyai : MonoBehaviour
 {
     public NavMeshAgent agent;
     public Transform player;
-    public LayerMask whatIsGround, whatIsPlayer;
 
     // Patroling
     public Vector3 walkPoint;
@@ -16,31 +15,28 @@ public class enemyai : MonoBehaviour
     public float timeBetweenAttacks = 1.5f;
     bool alreadyAttacked;
 
-    // States
-    public float sightRange = 12f;
-    public float attackRange = 1.5f;
-    public bool playerInSightRange, playerInAttackRange;
+    // States (werden NUR von Triggern gesetzt)
+    public bool playerInSightRange;
+    public bool playerInAttackRange;
 
     private void Awake()
     {
         player = GameObject.Find("Player").transform;
         agent = GetComponent<NavMeshAgent>();
-
-        // Wichtig: Agent darf am Anfang laufen
         agent.isStopped = false;
     }
 
     private void Update()
     {
-        // Check ranges
-        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, whatIsPlayer);
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
+        if (!playerInSightRange && !playerInAttackRange) 
+            Patroling();
 
-        if (!playerInSightRange && !playerInAttackRange) Patroling();
-        if (playerInSightRange && !playerInAttackRange) ChasePlayer();
-        if (playerInSightRange && playerInAttackRange) AttackPlayer();
+        if (playerInSightRange && !playerInAttackRange) 
+            ChasePlayer();
 
-        // Debug
+        if (playerInSightRange && playerInAttackRange) 
+            AttackPlayer();
+
         Debug.Log("hasPath: " + agent.hasPath
             + " | pathStatus: " + agent.pathStatus
             + " | isStopped: " + agent.isStopped
@@ -51,7 +47,8 @@ public class enemyai : MonoBehaviour
     {
         agent.isStopped = false;
 
-        if (!walkPointSet) SearchWalkPoint();
+        if (!walkPointSet) 
+            SearchWalkPoint();
 
         if (walkPointSet)
             agent.SetDestination(walkPoint);
@@ -63,23 +60,27 @@ public class enemyai : MonoBehaviour
     }
 
     private void SearchWalkPoint()
+	{
+    float randomZ = Random.Range(-walkPointRange, walkPointRange);
+    float randomX = Random.Range(-walkPointRange, walkPointRange);
+
+    Vector3 potentialPoint = new Vector3(
+        transform.position.x + randomX,
+        transform.position.y + 2f,
+        transform.position.z + randomZ
+    );
+
+    if (Physics.Raycast(potentialPoint, Vector3.down, out RaycastHit hit, 10f))
     {
-        float randomZ = Random.Range(-walkPointRange, walkPointRange);
-        float randomX = Random.Range(-walkPointRange, walkPointRange);
-
-        Vector3 potentialPoint = new Vector3(
-            transform.position.x + randomX,
-            transform.position.y + 5f,
-            transform.position.z + randomZ
-        );
-
-        // Raycast nach unten, um Boden zu finden
-        if (Physics.Raycast(potentialPoint, Vector3.down, out RaycastHit hit, 20f, whatIsGround))
+        NavMeshHit navHit;
+        if (NavMesh.SamplePosition(hit.point, out navHit, 1f, NavMesh.AllAreas))
         {
-            walkPoint = hit.point;
+            walkPoint = navHit.position;
             walkPointSet = true;
         }
     }
+}
+
 
     private void ChasePlayer()
     {
@@ -88,23 +89,27 @@ public class enemyai : MonoBehaviour
     }
 
     private void AttackPlayer()
+{
+    agent.isStopped = true;
+    transform.LookAt(player);
+
+    if (!alreadyAttacked)
     {
-        // NICHT stoppen – sonst bleibt er hängen
-        agent.isStopped = false;
+        // Schaden aus EnemyAttack.cs holen
+        int dmg = GetComponent<EnemyAttack>().damage;
 
-        transform.LookAt(player);
+        // Schaden am Player anwenden
+        player.GetComponent<PlayerHealth>().TakeDamage(dmg);
 
-        if (!alreadyAttacked)
-        {
-            // Attack code here
-
-            alreadyAttacked = true;
-            Invoke(nameof(ResetAttack), timeBetweenAttacks);
-        }
+        alreadyAttacked = true;
+        Invoke(nameof(ResetAttack), 2f); // alle 2 Sekunden
     }
+}
+
 
     private void ResetAttack()
     {
         alreadyAttacked = false;
     }
 }
+
