@@ -2,20 +2,15 @@ using UnityEngine;
 
 public class Shotgun : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public ParticleSystem muzzleflash;
-    void Start()
-    {
-        
-    }
+    public ShotgunRecoil recoil; // Referenz zum Recoil Script
 
-    // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // Left mouse button pressed
+        if (Input.GetMouseButtonDown(0))
         {
             muzzleflash.Play();
+            recoil.ApplyRecoil(); // Rückstoß auslösen
         }
-
     }
 }

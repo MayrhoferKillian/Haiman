@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float speed = 6f;
+    public float speed = 15f;
     public float gravity = -9.81f;
-    public float jumpHeight = 1.5f;
+    public float jumpHeight = 0f;
 
     private CharacterController controller;
     private Vector3 velocity;
