@@ -3,6 +3,7 @@ using UnityEngine.AI;
 
 public class enemyai : MonoBehaviour
 {
+    private Animator anim;
     public NavMeshAgent agent;
     public Transform player;
 
@@ -21,6 +22,7 @@ public class enemyai : MonoBehaviour
 
     private void Awake()
     {
+        anim = GetComponent<Animator>();
         player = GameObject.Find("Player").transform;
         agent = GetComponent<NavMeshAgent>();
         agent.isStopped = false;
@@ -36,6 +38,9 @@ public class enemyai : MonoBehaviour
 
         if (playerInSightRange && playerInAttackRange) 
             AttackPlayer();
+
+        if (agent.isStopped == false)
+            anim.SetTrigger("Walk");
 
         Debug.Log("hasPath: " + agent.hasPath
             + " | pathStatus: " + agent.pathStatus
@@ -95,8 +100,11 @@ public class enemyai : MonoBehaviour
 
     if (!alreadyAttacked)
     {
-        // Schaden aus EnemyAttack.cs holen
-        int dmg = GetComponent<EnemyAttack>().damage;
+            // Animation starten
+            anim.SetTrigger("Attack");
+
+            // Schaden aus EnemyAttack.cs holen
+            int dmg = GetComponent<EnemyAttack>().damage;
 
         // Schaden am Player anwenden
         player.GetComponent<PlayerHealth>().TakeDamage(dmg);
