@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Shotgun : MonoBehaviour
+public class ShotgunFake : MonoBehaviour
 {
     public int pelletCount = 8;
     public float spread = 0.1f;
